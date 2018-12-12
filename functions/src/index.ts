@@ -1,5 +1,10 @@
 import * as functions from 'firebase-functions';
 import * as Web3 from "web3"
+import * as admin from 'firebase-admin';
+import * as rateUpFunction from './rateUp';
+
+admin.initializeApp();
+const db = admin.firestore()
 import { WEB3_PROVIDER_ADDRESS } from "./config";
 
 // set infura provider for web3
@@ -22,4 +27,10 @@ functions.firestore.document('users/{userId}').onCreate((snapshot, context) => {
         privateKey: privateKey,
         balance: 0
     })
-})
+});
+
+// Rates up selected user (data.uid) in BouncingLine by user who invoked the action (context.auth.uid)
+export const rateUp = functions.https.onCall(
+    (data, context) => rateUpFunction.handler(data, context, db),
+);
+
