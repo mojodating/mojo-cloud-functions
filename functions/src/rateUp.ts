@@ -3,6 +3,10 @@ import { HOUSE_ENTERANCE_THRESHOLD } from "./config";
 
 let checkIfRated;
 
+// Handler for rateUp function
+// data - { uid: string }
+// context - Firebase https.onCall Context
+// db - database to use in function
 export const handler = (data, context, db) => {
     if (!context.auth) {
         throw new functions.https.HttpsError('failed-precondition', 'The function must be called ' +
