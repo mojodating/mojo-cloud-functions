@@ -23,7 +23,7 @@ firebase.auth()
     .then(token => {
         console.log('start execution');
         const addMessage = firebase.functions().httpsCallable('sendJoTokens');
-        addMessage({to: '0xF47C48Fe3AeAe9546088D150eCd0E7F1B4D58402', value: 5}).then(function(result) {
+        addMessage({to: '0xF47C48Fe3AeAe9546088D150eCd0E7F1B4D58402', value: 100000000000000000}).then(function(result) {
             console.log('result: ', result);
         })
         .catch(err => { console.log('inner error: ', err); });
