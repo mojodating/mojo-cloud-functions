@@ -42,9 +42,7 @@ export const handler = (data, context, db, web3) => {
         senderNonce = snapshot.data().nonce + 1
         return snapshot.ref.update({nonce: senderNonce})
     })
-    .then(() => {
-        return web3.eth.getTransactionCount(relayer)
-    })
+    .then( web3.eth.getTransactionCount(relayer) )
     .then(relayerNonce => {
         // prepare JOToken transfer message and sign it with sender private key
         const components = [
@@ -60,13 +58,13 @@ export const handler = (data, context, db, web3) => {
 
         // create raw transaction and sign it by relayer
         const rawTransaction = {
-            "from": relayer,
-            "nonce": web3.utils.toHex(relayerNonce),
-            "gasPrice": web3.utils.toHex(20* 1e9),
-            "gasLimit": web3.utils.toHex(2000000),
-            "to": jotokenAddress,
-            "value": "0x0",
-            "data": JOToken.methods.transferPreSigned(sig, data.to, web3.utils.toHex(data.value), '0x0'
+            from: relayer,
+            nonce: web3.utils.toHex(relayerNonce),
+            gasPrice: web3.utils.toHex(20* 1e9),
+            gasLimit: web3.utils.toHex(2000000),
+            to: jotokenAddress,
+            value: "0x0",
+            data: JOToken.methods.transferPreSigned(sig, data.to, web3.utils.toHex(data.value), '0x0'
                 , web3.utils.toHex(senderNonce)).encodeABI(),
             "chainId": 0x04
         };
@@ -76,9 +74,7 @@ export const handler = (data, context, db, web3) => {
         // send transaction
         return web3.eth.sendSignedTransaction('0x' + tx.serialize().toString('hex'))
     })
-    .then(receipt => {
-        return receipt.transactionHash
-    })
+    .then(receipt => { receipt.transactionHash })
     .catch(err => {
         console.log('error: ', err);
         throw err;

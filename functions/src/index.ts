@@ -35,5 +35,5 @@ export const rateUp = functions.https.onCall(
 );
 
 exports.sendJoTokens = functions.https.onCall((data, context) => {
-    return sendJoTokens.handler(data, context, db, web3)
+    sendJoTokens.handler(data, context, db, web3)
 })
