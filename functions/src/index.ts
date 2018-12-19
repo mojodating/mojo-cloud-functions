@@ -3,6 +3,7 @@ import * as Web3 from 'web3'
 import * as admin from 'firebase-admin'
 import * as rateUpFunction from './rateUp'
 import * as sendJoTokens from './sendJoTokens'
+import * as getBalance from './getBalance'
 import { WEB3_PROVIDER_ADDRESS } from './config'
 
 admin.initializeApp();
@@ -36,4 +37,8 @@ export const rateUp = functions.https.onCall(
 
 exports.sendJoTokens = functions.https.onCall((data, context) => {
     sendJoTokens.handler(data, context, db, web3)
+})
+
+exports.getBalance = functions.https.onCall((data) => {
+    return getBalance.handler(data, web3)
 })
