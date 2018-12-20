@@ -50,7 +50,7 @@ export const handler = async (data, context, db, web3) => {
         return result
     }
     catch(error) {
-        console.log('error: ', error)
+        console.error('error: ', error)
         throw new functions.https.HttpsError('internal', error)
     }
 }

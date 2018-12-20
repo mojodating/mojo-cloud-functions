@@ -18,10 +18,10 @@ export const handler = async (data, web3) => {
 
     try {
         const balance = await JOToken.methods.balanceOf(data.address).call()
-        return {'balance': balance}
+        return {balance}
     }
     catch(error) {
-        console.log('error: ', error)
+        console.error('error: ', error)
         throw new functions.https.HttpsError('internal', error)
     }
 }

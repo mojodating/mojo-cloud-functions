@@ -26,7 +26,7 @@ export const handler = async (context, db) => {
         return drinks
     }
     catch(error) {
-        console.log('error: ', error)
+        console.error('error: ', error)
         throw new functions.https.HttpsError('internal', error)
     }
 }

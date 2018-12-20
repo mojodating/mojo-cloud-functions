@@ -12,7 +12,7 @@ export const handler = async (db) => {
         return drinkTypes
     }
     catch(error) {
-        console.log('error: ', error)
+        console.error('error: ', error)
         throw new functions.https.HttpsError('internal', error)
     }
 }

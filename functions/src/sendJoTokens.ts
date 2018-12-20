@@ -35,7 +35,7 @@ export const handler = async (data, context, db, web3) => {
         return receipt.transactionHash
     }
     catch(error) {
-        console.log('error: ', error)
+        console.error('error: ', error)
         throw new functions.https.HttpsError('internal', error)
     }
 }

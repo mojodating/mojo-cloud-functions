@@ -21,41 +21,47 @@ export const transferTokens = async (db, web3, data) => {
     const parsedSource = JSON.parse(source)
     const JOToken = new web3.eth.Contract(parsedSource.abi, data.jotokenAddress)
 
-    // pay for drink
-    const userDoc = await db.doc(`users/${data.uid}`).get()
-    const senderPrivKey = userDoc.data().privateKey
-    const senderNonce = userDoc.data().nonce + 1
-    await userDoc.ref.update({nonce: senderNonce})
+    try {
+        // pay for drink
+        const userDoc = await db.doc(`users/${data.uid}`).get()
+        const senderPrivKey = userDoc.data().privateKey
+        const senderNonce = userDoc.data().nonce + 1
+        await userDoc.ref.update({nonce: senderNonce})
 
-    // prepare JOToken transfer message and sign it with sender private key
-    const components = [
-        Buffer.from('48664c16', 'hex'),
-        util.formattedAddress(data.jotokenAddress),
-        util.formattedAddress(data.to),
-        util.formattedInt(data.value),
-        util.formattedInt(0),
-        util.formattedInt(senderNonce)
-    ];
-    const vrs = ethutil.ecsign(util.hashedTightPacked(components), util.formattedAddress(senderPrivKey));
-    const sig = ethutil.toRpcSig(vrs.v, vrs.r, vrs.s);
+        // prepare JOToken transfer message and sign it with sender private key
+        const components = [
+            Buffer.from('48664c16', 'hex'),
+            util.formattedAddress(data.jotokenAddress),
+            util.formattedAddress(data.to),
+            util.formattedInt(data.value),
+            util.formattedInt(0),
+            util.formattedInt(senderNonce)
+        ];
+        const vrs = ethutil.ecsign(util.hashedTightPacked(components), util.formattedAddress(senderPrivKey));
+        const sig = ethutil.toRpcSig(vrs.v, vrs.r, vrs.s);
 
-    const relayerNonce = await web3.eth.getTransactionCount(data.relayer)
-    // create raw transaction and sign it by relayer
-    const rawTransaction = {
-        from: data.relayer,
-        nonce: web3.utils.toHex(relayerNonce),
-        gasPrice: web3.utils.toHex(20* 1e9),
-        gasLimit: web3.utils.toHex(2000000),
-        to: data.jotokenAddress,
-        value: "0x0",
-        data: JOToken.methods.transferPreSigned(sig, data.to, web3.utils.toHex(data.value), '0x0'
-            , web3.utils.toHex(senderNonce)).encodeABI(),
-        "chainId": 0x04
-    };
-    const tx = new Tx(rawTransaction);
-    tx.sign(util.formattedAddress(data.relayerPrivKey));
+        const relayerNonce = await web3.eth.getTransactionCount(data.relayer)
+        // create raw transaction and sign it by relayer
+        const rawTransaction = {
+            from: data.relayer,
+            nonce: web3.utils.toHex(relayerNonce),
+            gasPrice: web3.utils.toHex(20* 1e9),
+            gasLimit: web3.utils.toHex(2000000),
+            to: data.jotokenAddress,
+            value: "0x0",
+            data: JOToken.methods.transferPreSigned(sig, data.to, web3.utils.toHex(data.value), '0x0'
+                , web3.utils.toHex(senderNonce)).encodeABI(),
+            "chainId": 0x04
+        };
+        const tx = new Tx(rawTransaction);
+        tx.sign(util.formattedAddress(data.relayerPrivKey));
 
-    // send transaction
-    const receipt = await web3.eth.sendSignedTransaction('0x' + tx.serialize().toString('hex'))
-    return receipt
+        // send transaction
+        const receipt = await web3.eth.sendSignedTransaction('0x' + tx.serialize().toString('hex'))
+        return receipt
+    }
+    catch(error) {
+        console.error('transferTokens failed: ', error)
+        throw error
+    }
 }
