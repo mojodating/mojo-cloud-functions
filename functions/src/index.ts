@@ -41,7 +41,7 @@ functions.firestore.document('users/{userId}').onCreate((snapshot, context) => {
 
 // Rates up selected user (data.uid) in BouncingLine by user who invoked the action (context.auth.uid)
 export const rate = functions.https.onCall(
-    (data, context) => rateFunction.handler(data, context, db),
+    (data, context) => rateFunction.handler(data, context, db, web3),
 );
 
 exports.sendJoTokens = functions.https.onCall((data, context) => {
