@@ -4,6 +4,9 @@ import * as admin from 'firebase-admin'
 import * as rateFunction from './rate';
 import * as sendJoTokens from './sendJoTokens'
 import * as getBalance from './getBalance'
+import * as drinkTypes from './drinkTypes'
+import * as myDrinks from './myDrinks'
+import * as buyDrink from './buyDrink'
 import * as sendMessageFunction from './sendMessage';
 import * as getMessagesFunction from './getMessages';
 import * as getConversationsFunction from './getConversations';
@@ -42,11 +45,23 @@ export const rate = functions.https.onCall(
 );
 
 exports.sendJoTokens = functions.https.onCall((data, context) => {
-    sendJoTokens.handler(data, context, db, web3)
+    return sendJoTokens.handler(data, context, db, web3)
 })
 
 exports.getBalance = functions.https.onCall((data) => {
     return getBalance.handler(data, web3)
+})
+
+exports.drinkTypes = functions.https.onCall(() => {
+    return drinkTypes.handler(db)
+})
+
+exports.myDrinks = functions.https.onCall((data, context) => {
+    return myDrinks.handler(context, db)
+})
+
+exports.buyDrink = functions.https.onCall((data, context) => {
+    return buyDrink.handler(data, context, db, web3)
 })
 
 // Adds message (data.text) from user (context.auth.uid) to user (data.userUID) to real time database
