@@ -2,14 +2,14 @@
 
 ## Cloud Functions
 
-### rateUp
+### rate
 
 Used when user A rates user B
 Updates user B rating, when user B enters mojo house sends to him welcome JOtokens
 
 Usage:
 ```
-functions.httpsCallable("rateUp").call(["uid": user.uid]) { (result, error) in
+functions.httpsCallable("rate").call(["uid": user.uid]) { (result, error) in
   if let error = error as NSError? {
     if error.domain == FunctionsErrorDomain {
       let code = FunctionsErrorCode(rawValue: error.code)
