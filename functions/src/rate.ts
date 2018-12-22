@@ -29,12 +29,12 @@ export const handler = (data, context, db, web3) => {
                 const newBouncingLineRating = (docData.bouncingLineRating ? docData.bouncingLineRating : 0) + data.rate;
                 const newBouncingLineRatingCount = (docData.newBouncingLineRatingCount ? docData.newBouncingLineRatingCount : 0) + 1;
                 if (newBouncingLineRating >= HOUSE_ENTERANCE_THRESHOLD) {
-                    return payHouseReward(web3, doc.data().address)
-                    .then(t.update(userRef, { 
+                    return t.update(userRef, {
                         bouncingLineRating: newBouncingLineRating,
                         bouncingLineRatingCount: newBouncingLineRatingCount,
                         insideHouse: true,
-                    }));
+                    })
+                    .then(payHouseReward(web3, doc.data().address))
                 }
                 return t.update(userRef, {
                     bouncingLineRating: newBouncingLineRating,
