@@ -79,7 +79,7 @@ exports.sendJoTokens = functions.https.onCall((data, context) => {
 })
 
 exports.getBalance = functions.https.onCall((data) => {
-    return getBalance.handler(data, web3)
+    return getBalance.handler(data, db, web3)
 })
 
 exports.drinkTypes = functions.https.onCall(() => {
@@ -118,3 +118,10 @@ export const sendConversationRequest = functions.https.onCall(
 export const sendFeedback = functions.https.onCall(
     (data, context) => sendFeedbackFunction.handler(data, context, db),
 );
+
+export const updateToken = functions.https.onCall((data, context) => {
+    const ref = db.collection('users').doc(context.auth.uid);
+    return ref.update({
+        token: data.token
+    })
+})

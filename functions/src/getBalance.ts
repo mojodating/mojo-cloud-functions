@@ -1,14 +1,15 @@
-import * as functions from 'firebase-functions';
+import * as functions from 'firebase-functions'
 const fs = require('fs')
 
 // returns JoToken balance for address in wei
-// data - {"address": "ethereum_address"} 
-export const handler = async (data, web3) => {
+// data - {"uid": string}
+export const handler = async (data, db, web3) => {
     // read env variables
     const jotokenAddress = process.env.JOTOKEN_ADDRESS
 
-    if(!web3.utils.isAddress(data.address)) {
-        throw new functions.https.HttpsError('invalid-argument', 'Invalid eth address')
+    if (!(typeof data.uid === 'string') || data.uid.length === 0) {
+        throw new functions.https.HttpsError('invalid-argument', 'The function must be called with ' +
+            'argument: "uid" containing users uid');
     }
 
     // create JOToken instance
@@ -17,7 +18,9 @@ export const handler = async (data, web3) => {
     const JOToken = new web3.eth.Contract(parsedSource.abi, jotokenAddress)
 
     try {
-        const balance = await JOToken.methods.balanceOf(data.address).call()
+        const snapshot = await db.collection('users').doc(data.uid).get()
+        const address = snapshot.data().address
+        const balance = await JOToken.methods.balanceOf(address).call()
         return {balance}
     }
     catch(error) {
