@@ -39,9 +39,40 @@ functions.firestore.document('users/{userId}').onCreate((snapshot, context) => {
     })
 });
 
+// This trigger is executed when user enters mojo house
+// It sends notification to user
+export const onInsideHouse = functions.firestore
+.document('users/{userId}').onUpdate((change, context) => {
+    console.log('Function triggered by user change');
+    const newValue = change.after.data();
+    const previousValue = change.before.data();
+
+    if (newValue.insideHouse !== previousValue.insideHouse && newValue.insideHouse === true) {
+        console.log('New user enter the house, send notification')
+        const token = newValue.token
+        console.log(`token: ${token}`)
+
+        const payload = {
+            notification: {
+                title: "Welcome in Mojo House",
+                body: "Congratulations you've entered the Mojo House."
+            }
+        }
+        return admin.messaging().sendToDevice(token, payload)
+            .then(function(response) {
+                console.log("Successfully sent message:", response);
+            })
+            .catch(function(error) {
+                console.error("Error sending message:", error);
+            })
+    }
+
+    return null
+})
+
 // Rates up selected user (data.uid) in BouncingLine by user who invoked the action (context.auth.uid)
 export const rate = functions.https.onCall(
-    (data, context) => rateFunction.handler(data, context, db),
+    (data, context) => rateFunction.handler(data, context, db, web3),
 );
 
 exports.sendJoTokens = functions.https.onCall((data, context) => {
@@ -49,7 +80,7 @@ exports.sendJoTokens = functions.https.onCall((data, context) => {
 })
 
 exports.getBalance = functions.https.onCall((data) => {
-    return getBalance.handler(data, web3)
+    return getBalance.handler(data, db, web3)
 })
 
 exports.drinkTypes = functions.https.onCall(() => {
@@ -88,3 +119,10 @@ export const sendConversationRequest = functions.https.onCall(
 export const sendFeedback = functions.https.onCall(
     (data, context) => sendFeedbackFunction.handler(data, context, db),
 );
+
+export const updateToken = functions.https.onCall((data, context) => {
+    const ref = db.collection('users').doc(context.auth.uid);
+    return ref.update({
+        token: data.token
+    })
+})
