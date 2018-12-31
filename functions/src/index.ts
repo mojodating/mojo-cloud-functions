@@ -50,11 +50,12 @@ export const onInsideHouse = functions.firestore
     if (newValue.insideHouse !== previousValue.insideHouse && newValue.insideHouse === true) {
         console.log('New user enter the house, send notification')
         const token = newValue.token
+        console.log(`token: ${token}`)
+
         const payload = {
-            data: {
-                data_type: "HouseNotification",
-                title: "You've entered the Mojo House",
-                message: "Congratulations you've entered the Mojo House"
+            notification: {
+                title: "Welcome in Mojo House",
+                body: "Congratulations you've entered the Mojo House."
             }
         }
         return admin.messaging().sendToDevice(token, payload)
