@@ -12,12 +12,14 @@ import * as getMessagesFunction from './getMessages';
 import * as getConversationsFunction from './getConversations';
 import * as sendConversationRequestFunction from './sendConversationRequest';
 import * as sendFeedbackFunction from './sendFeedback';
+import * as onInsideHouseTrigger from './onInsideHouse'
 import { WEB3_PROVIDER_ADDRESS } from './config'
 
 admin.initializeApp();
 
 const db = admin.firestore()
-const rtdb = admin.database();
+const rtdb = admin.database()
+const messaging = admin.messaging()
 const web3 = new Web3(new Web3.providers.HttpProvider(WEB3_PROVIDER_ADDRESS))
 
 // This trigger is executed on every new user added to database
@@ -39,36 +41,11 @@ functions.firestore.document('users/{userId}').onCreate((snapshot, context) => {
     })
 });
 
-// This trigger is executed when user enters mojo house
-// It sends notification to user
+// This function is triggered by user metadata change
 export const onInsideHouse = functions.firestore
-.document('users/{userId}').onUpdate((change, context) => {
-    console.log('Function triggered by user change');
-    const newValue = change.after.data();
-    const previousValue = change.before.data();
-
-    if (newValue.insideHouse !== previousValue.insideHouse && newValue.insideHouse === true) {
-        console.log('New user enter the house, send notification')
-        const token = newValue.token
-        console.log(`token: ${token}`)
-
-        const payload = {
-            notification: {
-                title: "Welcome in Mojo House",
-                body: "Congratulations you've entered the Mojo House."
-            }
-        }
-        return admin.messaging().sendToDevice(token, payload)
-            .then(function(response) {
-                console.log("Successfully sent message:", response);
-            })
-            .catch(function(error) {
-                console.error("Error sending message:", error);
-            })
-    }
-
-    return null
-})
+.document('users/{userId}').onUpdate(
+    (change, context) => onInsideHouseTrigger.handler(messaging, web3, change)
+)
 
 // Rates up selected user (data.uid) in BouncingLine by user who invoked the action (context.auth.uid)
 export const rate = functions.https.onCall(
