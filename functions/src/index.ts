@@ -50,11 +50,12 @@ export const onInsideHouse = functions.firestore
     if (newValue.insideHouse !== previousValue.insideHouse && newValue.insideHouse === true) {
         console.log('New user enter the house, send notification')
         const token = newValue.token
+        console.log(`token: ${token}`)
+
         const payload = {
-            data: {
-                data_type: "HouseNotification",
-                title: "You've entered the Mojo House",
-                message: "Congratulations you've entered the Mojo House"
+            notification: {
+                title: "Welcome in Mojo House",
+                body: "Congratulations you've entered the Mojo House."
             }
         }
         return admin.messaging().sendToDevice(token, payload)
@@ -79,7 +80,7 @@ exports.sendJoTokens = functions.https.onCall((data, context) => {
 })
 
 exports.getBalance = functions.https.onCall((data) => {
-    return getBalance.handler(data, web3)
+    return getBalance.handler(data, db, web3)
 })
 
 exports.drinkTypes = functions.https.onCall(() => {
@@ -118,3 +119,10 @@ export const sendConversationRequest = functions.https.onCall(
 export const sendFeedback = functions.https.onCall(
     (data, context) => sendFeedbackFunction.handler(data, context, db),
 );
+
+export const updateToken = functions.https.onCall((data, context) => {
+    const ref = db.collection('users').doc(context.auth.uid);
+    return ref.update({
+        token: data.token
+    })
+})
