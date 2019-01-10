@@ -49,16 +49,16 @@ export const onInsideHouse = functions.firestore
 
 // Rates up selected user (data.uid) in BouncingLine by user who invoked the action (context.auth.uid)
 export const rate = functions.https.onCall(
-    (data, context) => rateFunction.handler(data, context, db, web3),
+    (data, context) => rateFunction.handler(data, context, db),
 );
 
 exports.sendJoTokens = functions.https.onCall((data, context) => {
     return sendJoTokens.handler(data, context, db, web3)
 })
 
-exports.getBalance = functions.https.onCall((data) => {
-    return getBalance.handler(data, db, web3)
-})
+exports.getBalance = functions.https.onCall(
+    (data, context) => getBalance.handler(data, db, web3)
+)
 
 exports.drinkTypes = functions.https.onCall(() => {
     return drinkTypes.handler(db)

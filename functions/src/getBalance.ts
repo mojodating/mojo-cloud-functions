@@ -6,6 +6,7 @@ const fs = require('fs')
 export const handler = async (data, db, web3) => {
     // read env variables
     const jotokenAddress = process.env.JOTOKEN_ADDRESS
+    console.log(`uid: ${data.uid}`)
 
     if (!(typeof data.uid === 'string') || data.uid.length === 0) {
         throw new functions.https.HttpsError('invalid-argument', 'The function must be called with ' +

@@ -22,8 +22,8 @@ firebase.auth()
     .then(user => user.user.getIdToken())
     .then(token => {
         console.log('start execution');
-        const addMessage = firebase.functions().httpsCallable('rate');
-        addMessage({ uid: 'test', rate: 5 }).then(function(result) {
+        const addMessage = firebase.functions().httpsCallable('getBalance');
+        addMessage({ uid: 'fJ5af9mtf0Y6iolstd9tadWaO7g1' }).then(function(result) {
             console.log('result: ', result);
         })
         .catch(err => { console.log('inner error: ', err); });
