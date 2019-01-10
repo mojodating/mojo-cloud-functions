@@ -4,7 +4,6 @@ import * as admin from 'firebase-admin'
 import * as rateFunction from './rate';
 import * as sendJoTokens from './sendJoTokens'
 import * as getBalance from './getBalance'
-import * as drinkTypes from './drinkTypes'
 import * as myDrinks from './myDrinks'
 import * as buyDrink from './buyDrink'
 import * as sendMessageFunction from './sendMessage';
@@ -37,7 +36,8 @@ functions.firestore.document('users/{userId}').onCreate((snapshot, context) => {
     return snapshot.ref.update({
         address: address,
         privateKey: privateKey,
-        nonce: 0
+        nonce: 0,
+        insideHouse: false
     })
 });
 
@@ -59,10 +59,6 @@ exports.sendJoTokens = functions.https.onCall((data, context) => {
 exports.getBalance = functions.https.onCall(
     (data, context) => getBalance.handler(data, db, web3)
 )
-
-exports.drinkTypes = functions.https.onCall(() => {
-    return drinkTypes.handler(db)
-})
 
 exports.myDrinks = functions.https.onCall((data, context) => {
     return myDrinks.handler(context, db)
@@ -89,7 +85,7 @@ export const getConversations = functions.https.onCall(
 
 // Gets conversations of user (context.auth.uid) from real time database
 export const sendConversationRequest = functions.https.onCall(
-    (data, context) => sendConversationRequestFunction.handler(data, context, rtdb, db),
+    (data, context) => sendConversationRequestFunction.handler(data, context, db, web3),
 );
 
 // Gets conversations of user (context.auth.uid) from real time database
