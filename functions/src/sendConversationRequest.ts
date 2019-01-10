@@ -21,7 +21,7 @@ export const handler = (data, context, db, web3) => {
 
     const fromUid = context.auth.uid;
     const toUid = data.uid;
-    const invitationId = util.guid();
+    const requestId = util.guid();
     const fromUserRef = db.collection('users').doc(fromUid)
     const toUserRef = db.collection('users').doc(toUid)
     let drinkid
@@ -47,14 +47,14 @@ export const handler = (data, context, db, web3) => {
         // add invitation to sender database
         .then(doc => {
             const docData = doc.data();
-            if (docData.requests && docData.requests.filter(item => item.to === toUid).length > 0) {
+            if (docData.sentRequests && docData.sentRequests.filter(item => item.to === toUid).length > 0) {
                 throw new functions.https.HttpsError('failed-precondition', 'The conversation between' +
                     'there users already exist.');
             }
             return batch.update(fromUserRef, {
-                requests: { ...(docData.requests ? docData.requests : []), [invitationId]: {
+                sentRequests: { ...(docData.sentRequests ? docData.sentRequests : []), [requestId]: {
                     to: toUid,
-                    type: 'sent',
+                    accepted: false,
                     text: data.text, 
                     drinkid: drinkid
                 } },
@@ -65,9 +65,9 @@ export const handler = (data, context, db, web3) => {
             .then(doc => {
                 const docData = doc.data();
                 return batch.update(toUserRef, {
-                    requests: { ...(docData.requests ? docData.requests : []), [invitationId]: {
+                    receivedRequests: { ...(docData.receivedRequests ? docData.receivedRequests : []), [requestId]: {
                         from: fromUid,
-                        type: 'received',
+                        accepted: false,
                         text: data.text,
                         drinkid: drinkid
                     } },
