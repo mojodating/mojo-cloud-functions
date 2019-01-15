@@ -7,7 +7,7 @@ let checkIfRated
 // data - { uid: string, rate: number }
 // context - Firebase https.onCall Context
 // db - database to use in function
-export const handler = (data, context, db, web3) => {
+export const handler = (data, context, db) => {
     if (!context.auth) {
         throw new functions.https.HttpsError('failed-precondition', 'The function must be called ' +
             'while authenticated.');
