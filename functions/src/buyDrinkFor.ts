@@ -42,7 +42,7 @@ export const buyDrinkFor = async (db, web3, data) => {
         })
         await docRef.update({id: docRef.id})
 
-        return {id: docRef.id, imageUrl: drinkTypeDoc.data().imageUrl, name: drinkTypeDoc.data().name}
+        return {price: drinkTypeDoc.data().price, imageUrl: drinkTypeDoc.data().imageUrl, name: drinkTypeDoc.data().name}
     }
     catch(error) {
         console.error('error: ', error)

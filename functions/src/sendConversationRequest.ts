@@ -54,11 +54,12 @@ export const handler = (data, context, db, rtdb, web3) => {
             }
             return batch.update(fromUserRef, {
                 conversations: { ...(docData.conversations ? docData.conversations : []), [conversationId]: {
+                    id: conversationId,
                     sender: fromUid,
                     receiver: toUid,
                     accepted: false,
                     text: data.text, 
-                    drinkid: drink.id,
+                    drinkPrice: drink.price,
                     drinkImage: drink.imageUrl,
                     drinkName: drink.name
                 } },
@@ -70,11 +71,12 @@ export const handler = (data, context, db, rtdb, web3) => {
                 const docData = doc.data();
                 return batch.update(toUserRef, {
                     conversations: { ...(docData.conversations ? docData.conversations : []), [conversationId]: {
+                        id: conversationId,
                         sender: fromUid,
                         receiver: toUid,
                         accepted: false,
                         text: data.text,
-                        drinkid: drink.id,
+                        drinkPrice: drink.price,
                         drinkImage: drink.imageUrl,
                         drinkName: drink.name
                     } },
