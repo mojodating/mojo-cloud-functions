@@ -85,7 +85,7 @@ export const getConversations = functions.https.onCall(
 
 // Gets conversations of user (context.auth.uid) from real time database
 export const sendConversationRequest = functions.https.onCall(
-    (data, context) => sendConversationRequestFunction.handler(data, context, db, web3),
+    (data, context) => sendConversationRequestFunction.handler(data, context, db, rtdb, web3),
 );
 
 // Gets conversations of user (context.auth.uid) from real time database

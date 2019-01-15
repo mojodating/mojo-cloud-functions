@@ -21,7 +21,8 @@ export const handler = async (data, db, web3) => {
     try {
         const snapshot = await db.collection('users').doc(data.uid).get()
         const address = snapshot.data().address
-        const balance = await JOToken.methods.balanceOf(address).call()
+        const weiBalance = await JOToken.methods.balanceOf(address).call()
+        const balance = Number(web3.utils.fromWei(weiBalance, 'ether'))
         return {balance}
     }
     catch(error) {

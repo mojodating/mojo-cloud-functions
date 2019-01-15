@@ -36,11 +36,13 @@ export const buyDrinkFor = async (db, web3, data) => {
             blocked: true,
             owner: data.uid,
             sentTo: data.receiver,
-            typeid: drinkTypeDoc.data().id
+            typeid: drinkTypeDoc.data().id,
+            imageUrl: drinkTypeDoc.data().imageUrl,
+            name: drinkTypeDoc.data().name
         })
         await docRef.update({id: docRef.id})
 
-        return docRef.id
+        return {id: docRef.id, imageUrl: drinkTypeDoc.data().imageUrl, name: drinkTypeDoc.data().name}
     }
     catch(error) {
         console.error('error: ', error)
