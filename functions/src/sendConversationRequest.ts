@@ -19,12 +19,14 @@ export const handler = (data, context, db, rtdb, web3) => {
             'arguments userId" containing user UID and "text" containing message for this user.');
     }
 
+    console.log(data)
     const fromUid = context.auth.uid;
     const toUid = data.uid;
     const conversationId = util.guid();
     const fromUserRef = db.collection('users').doc(fromUid)
     const toUserRef = db.collection('users').doc(toUid)
     let drink
+    let docData
 
     // read env variables
     const jotokenAddress = process.env.JOTOKEN_ADDRESS
@@ -32,26 +34,31 @@ export const handler = (data, context, db, rtdb, web3) => {
     const relayerPrivKey = process.env.RELAYER_PRIVATE_KEY
     const batch = db.batch()
         // buy drink and send
-    return buyDrinkFor(db, web3, {
-            uid: fromUid,
-            receiver: toUid,
-            drinktypeid: data.drinktypeid,
-            jotokenAddress: jotokenAddress,
-            relayer: relayer,
-            relayerPrivKey: relayerPrivKey
+    return fromUserRef.get()
+        .then(doc => {
+            docData = doc.data()
+            console.log(docData.conversations)
+            if (docData.conversations) {
+                Object.keys(docData.conversations).forEach(function(key) {
+                    if (docData.conversations[key].receiver === toUid) {
+                        throw new functions.https.HttpsError('failed-precondition', 'The conversation between ' +
+                            'these users already exist.');
+                    }
+                })
+            }
+            return buyDrinkFor(db, web3, {
+                uid: fromUid,
+                receiver: toUid,
+                drinktypeid: data.drinktypeid,
+                jotokenAddress: jotokenAddress,
+                relayer: relayer,
+                relayerPrivKey: relayerPrivKey
+            })
         })
+        // add invitation to sender database
         .then(boughtDrink => {
             drink = boughtDrink
             console.log(drink)
-            return fromUserRef.get()
-        })
-        // add invitation to sender database
-        .then(doc => {
-            const docData = doc.data();
-            if (docData.conversations && docData.conversations.filter(item => item.receiver === toUid).length > 0) {
-                throw new functions.https.HttpsError('failed-precondition', 'The conversation between' +
-                    'there users already exist.');
-            }
             return batch.update(fromUserRef, {
                 conversations: { ...(docData.conversations ? docData.conversations : []), [conversationId]: {
                     id: conversationId,
@@ -68,9 +75,9 @@ export const handler = (data, context, db, rtdb, web3) => {
         // add invitation to receiver database
         .then(() => toUserRef.get()
             .then(doc => {
-                const docData = doc.data();
+                const toUserDoc = doc.data();
                 return batch.update(toUserRef, {
-                    conversations: { ...(docData.conversations ? docData.conversations : []), [conversationId]: {
+                    conversations: { ...(toUserDoc.conversations ? toUserDoc.conversations : []), [conversationId]: {
                         id: conversationId,
                         sender: fromUid,
                         receiver: toUid,
@@ -91,9 +98,9 @@ export const handler = (data, context, db, rtdb, web3) => {
                 text: data.text,
                 date: new Date().getTime(),
             };
-            const updates = {};
-            updates[`conversations/${conversationId}`] = [message];
-            return rtdb.ref().update(updates);
+            // const updates = {};
+            // updates[`conversations/${conversationId}`] = [message];
+            return rtdb.ref().child(`conversations/${conversationId}`).push().set(message);
         })
         .catch(error => {
             console.error('error: ', error)
