@@ -6,8 +6,6 @@ import * as sendJoTokens from './sendJoTokens'
 import * as getBalance from './getBalance'
 import * as myDrinks from './myDrinks'
 import * as buyDrink from './buyDrink'
-import * as sendMessageFunction from './sendMessage';
-import * as getMessagesFunction from './getMessages';
 import * as getConversationsFunction from './getConversations';
 import * as sendConversationRequestFunction from './sendConversationRequest';
 import * as sendFeedbackFunction from './sendFeedback';
@@ -18,7 +16,6 @@ import { WEB3_PROVIDER_ADDRESS } from './config'
 admin.initializeApp();
 
 const db = admin.firestore()
-const rtdb = admin.database()
 const messaging = admin.messaging()
 const web3 = new Web3(new Web3.providers.HttpProvider(WEB3_PROVIDER_ADDRESS))
 
@@ -49,9 +46,9 @@ export const onInsideHouse = functions.firestore
 )
 
 // on message create accept request
-export const onMessageCreate = functions.database
-.ref('/conversations/{conversationId}/{messageId}').onCreate(
-    (snapshot, context) => onMessageCreateTrigger.handler(snapshot, context, db)
+export const onMessageCreate = functions.firestore
+.document('conversations/{conversationId}/messages/{messageId}').onCreate(
+    (snap, context) => onMessageCreateTrigger.handler(snap, context, db)
 )
 
 // Rates up selected user (data.uid) in BouncingLine by user who invoked the action (context.auth.uid)
@@ -75,16 +72,6 @@ exports.buyDrink = functions.https.onCall((data, context) => {
     return buyDrink.handler(data, context, db, web3)
 })
 
-// Adds message (data.text) from user (context.auth.uid) to user (data.userUID) to real time database
-export const sendMessage = functions.https.onCall(
-    (data, context) => sendMessageFunction.handler(data, context, rtdb, db),
-);
-
-// Gets messages from user (context.auth.uid) to user (data.userUID) from real time database
-export const getMessages = functions.https.onCall(
-    (data, context) => getMessagesFunction.handler(data, context, rtdb),
-);
-
 // Gets conversations of user (context.auth.uid) from real time database
 export const getConversations = functions.https.onCall(
     (data, context) => getConversationsFunction.handler(data, context, db),
@@ -92,7 +79,7 @@ export const getConversations = functions.https.onCall(
 
 // Gets conversations of user (context.auth.uid) from real time database
 export const sendConversationRequest = functions.https.onCall(
-    (data, context) => sendConversationRequestFunction.handler(data, context, db, rtdb, web3),
+    (data, context) => sendConversationRequestFunction.handler(data, context, db, web3),
 );
 
 // Gets conversations of user (context.auth.uid) from real time database

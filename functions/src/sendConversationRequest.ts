@@ -98,7 +98,7 @@ export const handler = (data, context, db, web3) => {
                 date: new Date().getTime(),
             };
 
-            let newMessageDoc = db.collection(`conversations/${conversationId}/messages`).doc()
+            const newMessageDoc = db.collection(`conversations/${conversationId}/messages`).doc()
             return batch.set(newMessageDoc, message)
         })
         .then(() => batch.commit())

@@ -6,7 +6,7 @@ export const handler = (snapshot, context, db) => {
     const messageId = context.params.messageId
     console.log(`new message ${messageId} in conversation ${convId}`)
 
-    const messageData = snapshot.val()
+    const messageData = snapshot.data()
     const sender = messageData.sender
 
     const senderRef = db.collection('users').doc(sender)
