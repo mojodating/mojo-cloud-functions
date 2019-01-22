@@ -90,7 +90,6 @@ export const handler = (data, context, db, rtdb, web3) => {
                 });
             })
         )
-        .then(() => batch.commit())
         .then(() => {
             const message = {
                 sender: fromUid,
@@ -98,8 +97,11 @@ export const handler = (data, context, db, rtdb, web3) => {
                 text: data.text,
                 date: new Date().getTime(),
             };
-            return rtdb.ref().child(`conversations/${conversationId}`).push().set(message);
+
+            let newMessageDoc = db.collection(`conversations/${conversationId}/messages`).doc()
+            return batch.set(newMessageDoc, message)
         })
+        .then(() => batch.commit())
         .catch(error => {
             console.error('error: ', error)
             throw new functions.https.HttpsError('internal', error)
