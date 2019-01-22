@@ -98,8 +98,6 @@ export const handler = (data, context, db, rtdb, web3) => {
                 text: data.text,
                 date: new Date().getTime(),
             };
-            // const updates = {};
-            // updates[`conversations/${conversationId}`] = [message];
             return rtdb.ref().child(`conversations/${conversationId}`).push().set(message);
         })
         .catch(error => {

@@ -12,6 +12,7 @@ import * as getConversationsFunction from './getConversations';
 import * as sendConversationRequestFunction from './sendConversationRequest';
 import * as sendFeedbackFunction from './sendFeedback';
 import * as onInsideHouseTrigger from './onInsideHouse'
+import * as onMessageCreateTrigger from './onMessageCreate'
 import { WEB3_PROVIDER_ADDRESS } from './config'
 
 admin.initializeApp();
@@ -45,6 +46,12 @@ functions.firestore.document('users/{userId}').onCreate((snapshot, context) => {
 export const onInsideHouse = functions.firestore
 .document('users/{userId}').onUpdate(
     (change, context) => onInsideHouseTrigger.handler(messaging, web3, change)
+)
+
+// on message create accept request
+export const onMessageCreate = functions.database
+.ref('/conversations/{conversationId}/{messageId}').onCreate(
+    (snapshot, context) => onMessageCreateTrigger.handler(snapshot, context, db)
 )
 
 // Rates up selected user (data.uid) in BouncingLine by user who invoked the action (context.auth.uid)
