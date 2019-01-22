@@ -4,20 +4,19 @@ import * as admin from 'firebase-admin'
 import * as rateFunction from './rate';
 import * as sendJoTokens from './sendJoTokens'
 import * as getBalance from './getBalance'
-import * as drinkTypes from './drinkTypes'
 import * as myDrinks from './myDrinks'
 import * as buyDrink from './buyDrink'
-import * as sendMessageFunction from './sendMessage';
-import * as getMessagesFunction from './getMessages';
 import * as getConversationsFunction from './getConversations';
 import * as sendConversationRequestFunction from './sendConversationRequest';
 import * as sendFeedbackFunction from './sendFeedback';
+import * as onInsideHouseTrigger from './onInsideHouse'
+import * as onMessageCreateTrigger from './onMessageCreate'
 import { WEB3_PROVIDER_ADDRESS } from './config'
 
 admin.initializeApp();
 
 const db = admin.firestore()
-const rtdb = admin.database();
+const messaging = admin.messaging()
 const web3 = new Web3(new Web3.providers.HttpProvider(WEB3_PROVIDER_ADDRESS))
 
 // This trigger is executed on every new user added to database
@@ -35,57 +34,35 @@ functions.firestore.document('users/{userId}').onCreate((snapshot, context) => {
     return snapshot.ref.update({
         address: address,
         privateKey: privateKey,
-        nonce: 0
+        nonce: 0,
+        insideHouse: false
     })
 });
 
-// This trigger is executed when user enters mojo house
-// It sends notification to user
+// This function is triggered by user metadata change
 export const onInsideHouse = functions.firestore
-.document('users/{userId}').onUpdate((change, context) => {
-    console.log('Function triggered by user change');
-    const newValue = change.after.data();
-    const previousValue = change.before.data();
+.document('users/{userId}').onUpdate(
+    (change, context) => onInsideHouseTrigger.handler(messaging, web3, change)
+)
 
-    if (newValue.insideHouse !== previousValue.insideHouse && newValue.insideHouse === true) {
-        console.log('New user enter the house, send notification')
-        const token = newValue.token
-        console.log(`token: ${token}`)
-
-        const payload = {
-            notification: {
-                title: "Welcome in Mojo House",
-                body: "Congratulations you've entered the Mojo House."
-            }
-        }
-        return admin.messaging().sendToDevice(token, payload)
-            .then(function(response) {
-                console.log("Successfully sent message:", response);
-            })
-            .catch(function(error) {
-                console.error("Error sending message:", error);
-            })
-    }
-
-    return null
-})
+// on message create accept request
+export const onMessageCreate = functions.firestore
+.document('conversations/{conversationId}/messages/{messageId}').onCreate(
+    (snap, context) => onMessageCreateTrigger.handler(snap, context, db)
+)
 
 // Rates up selected user (data.uid) in BouncingLine by user who invoked the action (context.auth.uid)
 export const rate = functions.https.onCall(
-    (data, context) => rateFunction.handler(data, context, db, web3),
+    (data, context) => rateFunction.handler(data, context, db),
 );
 
 exports.sendJoTokens = functions.https.onCall((data, context) => {
     return sendJoTokens.handler(data, context, db, web3)
 })
 
-exports.getBalance = functions.https.onCall((data) => {
-    return getBalance.handler(data, db, web3)
-})
-
-exports.drinkTypes = functions.https.onCall(() => {
-    return drinkTypes.handler(db)
-})
+exports.getBalance = functions.https.onCall(
+    (data, context) => getBalance.handler(data, db, web3)
+)
 
 exports.myDrinks = functions.https.onCall((data, context) => {
     return myDrinks.handler(context, db)
@@ -95,16 +72,6 @@ exports.buyDrink = functions.https.onCall((data, context) => {
     return buyDrink.handler(data, context, db, web3)
 })
 
-// Adds message (data.text) from user (context.auth.uid) to user (data.userUID) to real time database
-export const sendMessage = functions.https.onCall(
-    (data, context) => sendMessageFunction.handler(data, context, rtdb, db),
-);
-
-// Gets messages from user (context.auth.uid) to user (data.userUID) from real time database
-export const getMessages = functions.https.onCall(
-    (data, context) => getMessagesFunction.handler(data, context, rtdb),
-);
-
 // Gets conversations of user (context.auth.uid) from real time database
 export const getConversations = functions.https.onCall(
     (data, context) => getConversationsFunction.handler(data, context, db),
@@ -112,7 +79,7 @@ export const getConversations = functions.https.onCall(
 
 // Gets conversations of user (context.auth.uid) from real time database
 export const sendConversationRequest = functions.https.onCall(
-    (data, context) => sendConversationRequestFunction.handler(data, context, rtdb, db),
+    (data, context) => sendConversationRequestFunction.handler(data, context, db, web3),
 );
 
 // Gets conversations of user (context.auth.uid) from real time database

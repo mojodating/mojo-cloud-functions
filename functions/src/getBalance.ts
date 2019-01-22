@@ -6,6 +6,7 @@ const fs = require('fs')
 export const handler = async (data, db, web3) => {
     // read env variables
     const jotokenAddress = process.env.JOTOKEN_ADDRESS
+    console.log(`uid: ${data.uid}`)
 
     if (!(typeof data.uid === 'string') || data.uid.length === 0) {
         throw new functions.https.HttpsError('invalid-argument', 'The function must be called with ' +
@@ -20,7 +21,8 @@ export const handler = async (data, db, web3) => {
     try {
         const snapshot = await db.collection('users').doc(data.uid).get()
         const address = snapshot.data().address
-        const balance = await JOToken.methods.balanceOf(address).call()
+        const weiBalance = await JOToken.methods.balanceOf(address).call()
+        const balance = Number(web3.utils.fromWei(weiBalance, 'ether'))
         return {balance}
     }
     catch(error) {
