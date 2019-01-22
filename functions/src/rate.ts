@@ -1,7 +1,7 @@
-import * as functions from 'firebase-functions';
+import * as functions from 'firebase-functions'
 import { HOUSE_ENTERANCE_THRESHOLD } from "./config";
 
-let checkIfRated;
+let checkIfRated
 
 // Handler for rate function
 // data - { uid: string, rate: number }
@@ -25,11 +25,11 @@ export const handler = (data, context, db) => {
                 const newBouncingLineRating = (docData.bouncingLineRating ? docData.bouncingLineRating : 0) + data.rate;
                 const newBouncingLineRatingCount = (docData.newBouncingLineRatingCount ? docData.newBouncingLineRatingCount : 0) + 1;
                 if (newBouncingLineRating >= HOUSE_ENTERANCE_THRESHOLD) {
-                    return t.update(userRef, { 
+                    return t.update(userRef, {
                         bouncingLineRating: newBouncingLineRating,
                         bouncingLineRatingCount: newBouncingLineRatingCount,
                         insideHouse: true,
-                    });
+                    })
                 }
                 return t.update(userRef, {
                     bouncingLineRating: newBouncingLineRating,
