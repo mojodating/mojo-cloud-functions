@@ -3,7 +3,7 @@ import * as functions from 'firebase-functions';
 let checkIfSent;
 
 // Handler for sendFeedback function
-// data - { userId: string, feedback: number }
+// data - { uid: string, feedback: number }
 // context - Firebase https.onCall Context
 // db - database to use in function
 export const handler = (data, context, db) => {
@@ -11,17 +11,17 @@ export const handler = (data, context, db) => {
         throw new functions.https.HttpsError('failed-precondition', 'The function must be called ' +
             'while authenticated.');
     }
-    if (!(typeof data.userId === 'string') || data.userId.length === 0 || typeof data.feedback === 'number') {
+    if (!(typeof data.uid === 'string') || data.uid.length === 0 || !(typeof data.feedback === 'number')) {
         throw new functions.https.HttpsError('invalid-argument', 'The function must be called with ' +
-            'one arguments "userId" containing users id and "feedback" containing feedback id about the user.');
+            'one arguments "uid" containing users id and "feedback" containing feedback id about the user.');
     }
     const fromUser = context.auth.uid;
-    const toUser = data.userId;
+    const toUser = data.uid;
     const feedback = data.feedback;
 
     const userRef = db.collection('users').doc(toUser);
     return db.runTransaction(t => t.get(userRef)
-        .then(doc => checkIfSent(data, context, db)
+        .then(doc => checkIfSent(fromUser, toUser, db)
             .then(() => {
                 const docData = doc.data();
                 const newFeedbackValue = (docData.feedback ? docData.feedback[feedback] : 0) + 1;
@@ -29,7 +29,7 @@ export const handler = (data, context, db) => {
                     ...docData,
                     feedback: {
                         ...docData.feedback,
-                        [feedback]: newFeedbackValue,
+                        [fromUser]: newFeedbackValue,
                     },
                 });
             })
