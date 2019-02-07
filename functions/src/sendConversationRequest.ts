@@ -65,7 +65,8 @@ export const handler = (data, context, db, web3) => {
                     sender: fromUid,
                     receiver: toUid,
                     accepted: false,
-                    text: data.text, 
+                    text: data.text,
+                    drinkId: drink.id,
                     drinkPrice: drink.price,
                     drinkImage: drink.imageUrl,
                     drinkName: drink.name
@@ -83,6 +84,7 @@ export const handler = (data, context, db, web3) => {
                         receiver: toUid,
                         accepted: false,
                         text: data.text,
+                        drinkId: drink.id,
                         drinkPrice: drink.price,
                         drinkImage: drink.imageUrl,
                         drinkName: drink.name
@@ -95,7 +97,8 @@ export const handler = (data, context, db, web3) => {
                 sender: fromUid,
                 receiver: toUid,
                 text: data.text,
-                date: new Date().getTime(),
+                drinkId: drink.id,
+                date: new Date().getTime()/1000,
             };
 
             const newMessageDoc = db.collection(`conversations/${conversationId}/messages`).doc()

@@ -16,22 +16,24 @@ export const handler = (data, context, db) => {
         throw new functions.https.HttpsError('invalid-argument', 'The function must be called with ' +
             'two arguments: "uid" containing users uid and "rate" containing rating fot this user.');
     }
-
+    
+    const batch = db.batch()
     const userRef = db.collection('users').doc(data.uid);
-    return db.runTransaction(t => t.get(userRef)
+    return userRef.get()
         .then(doc => checkIfRated(data, context, db)
             .then(() => {
+                console.log(`Update bouncing line rate for user: ${data.uid} rate: ${data.rate}`)
                 const docData = doc.data();
                 const newBouncingLineRating = (docData.bouncingLineRating ? docData.bouncingLineRating : 0) + data.rate;
-                const newBouncingLineRatingCount = (docData.newBouncingLineRatingCount ? docData.newBouncingLineRatingCount : 0) + 1;
+                const newBouncingLineRatingCount = (docData.bouncingLineRatingCount ? docData.bouncingLineRatingCount : 0) + 1;
                 if (newBouncingLineRating >= HOUSE_ENTERANCE_THRESHOLD) {
-                    return t.update(userRef, {
+                    return batch.update(userRef, {
                         bouncingLineRating: newBouncingLineRating,
                         bouncingLineRatingCount: newBouncingLineRatingCount,
                         insideHouse: true,
                     })
                 }
-                return t.update(userRef, {
+                return batch.update(userRef, {
                     bouncingLineRating: newBouncingLineRating,
                     bouncingLineRatingCount: newBouncingLineRatingCount,
                 });
@@ -40,13 +42,10 @@ export const handler = (data, context, db) => {
                 console.error('err: ', err);
                 throw new functions.https.HttpsError('failed-precondition', 'This user has already been rated');
             })
-        ).catch(err => {
-            console.log('Transaction failure:', err);
-            throw err;
-        })
-    ).then(result => {
-        const bouncingLineRatingRef = db.collection('bouncingLineRating').doc(context.auth.uid);
-        return db.runTransaction(t => t.get(bouncingLineRatingRef)
+        )
+        .then(result => {
+            const bouncingLineRatingRef = db.collection('bouncingLineRating').doc(context.auth.uid);
+            return bouncingLineRatingRef.get()
             .then(doc => {
                 if (doc.exists) {
                     const docData = doc.data();
@@ -57,23 +56,27 @@ export const handler = (data, context, db) => {
                         ...docData.ratedUsers,
                         [data.uid]: data.rate,
                     };
-                    return t.update(bouncingLineRatingRef, { ratedUsers: newRatedUsers });
+                    return batch.update(bouncingLineRatingRef, { ratedUsers: newRatedUsers });
                 }
                 return bouncingLineRatingRef.set({ ratedUsers: {[data.uid]: data.rate} });
-            }));
-    }).catch(err => {
-        console.log('Transaction failure:', err);
-        throw err;
-    });
+            });
+        })
+        .then(() => batch.commit())
+        .catch(err => {
+            console.log('Transaction failure:', err);
+            throw err;
+        });
 }
 
 checkIfRated = (data, context, db) => {
     return new Promise((resolve, reject) => {
         const bouncingLineRatingRef = db.collection('bouncingLineRating').doc(context.auth.uid);
         bouncingLineRatingRef.get().then(doc => {
+            console.log(`doc exist for user: ${context.auth.uid}: ${doc.exists}`)
             if (doc.exists) {
                 const alreadyRated = doc.data()
                     .ratedUsers[data.uid];
+                console.log(`already rated: ${alreadyRated}`)
                 if (alreadyRated) {
                     reject();
                 } else {

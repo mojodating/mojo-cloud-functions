@@ -26,11 +26,14 @@ export const handler = (snapshot, context, db) => {
 acceptRequest = (fromUserId, toUserId, conversationId, db) => {
     const fromUserRef = db.collection('users').doc(fromUserId);
     const toUserRef = db.collection('users').doc(toUserId);
+    let drinkid
     const batch = db.batch()
 
     return fromUserRef.get()
         .then(doc => {
             const docData = doc.data();
+            drinkid = docData.conversations[conversationId].drinkId
+            console.log(`drinkid: ${drinkid}`)
             return batch.update(fromUserRef, {
                 conversations: { 
                     ...docData.conversations,
@@ -55,7 +58,18 @@ acceptRequest = (fromUserId, toUserId, conversationId, db) => {
                 });
             })
         )
-        .then(() => batch.commit());
-        // TODO: transfer digital goods
-
+        .then(() => db.collection('drinks').doc(drinkid).get())
+        .then(doc => {
+            const docData = doc.data()
+            return batch.update(db.collection('drinks').doc(drinkid), {
+                owner: docData.sentTo,
+                sentTo: "",
+                blocked: false,
+            })
+        })
+        .then(() => batch.commit())
+        .catch(err => {
+            console.log('error: ', err);
+            throw err;
+        })
 }
