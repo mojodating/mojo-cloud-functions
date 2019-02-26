@@ -7,7 +7,7 @@ import {buyDrinkFor} from './buyDrinkFor'
 // context - Firebase https.onCall Context
 // rtdb - realtime database to use in function
 // db - firestore database to use in function
-export const handler = (data, context, db, web3) => {
+export const handler = (data, context, db, web3, messaging) => {
     if (!context.auth) {
         throw new functions.https.HttpsError('failed-precondition', 'The function must be called ' +
             'while authenticated.');
@@ -28,12 +28,22 @@ export const handler = (data, context, db, web3) => {
     let drink
     let docData
 
+    // prepare message notification payload
+    const payload = {
+        notification: {
+            title: "Chat request",
+            from: fromUid,
+            body: data.text
+        }
+    }
+
     // read env variables
     const jotokenAddress = process.env.JOTOKEN_ADDRESS
     const relayer = process.env.RELAYER_ADDRESS
     const relayerPrivKey = process.env.RELAYER_PRIVATE_KEY
     const batch = db.batch()
-        // buy drink and send
+    
+    // buy drink and send
     return fromUserRef.get()
         .then(doc => {
             docData = doc.data()
@@ -55,6 +65,7 @@ export const handler = (data, context, db, web3) => {
                 relayerPrivKey: relayerPrivKey
             })
         })
+
         // add invitation to sender database
         .then(boughtDrink => {
             drink = boughtDrink
@@ -73,6 +84,7 @@ export const handler = (data, context, db, web3) => {
                 } },
             });
         })
+
         // add invitation to receiver database
         .then(() => toUserRef.get()
             .then(doc => {
@@ -92,6 +104,8 @@ export const handler = (data, context, db, web3) => {
                 });
             })
         )
+
+        // add message to conversation database
         .then(() => {
             const message = {
                 sender: fromUid,
@@ -104,7 +118,20 @@ export const handler = (data, context, db, web3) => {
             const newMessageDoc = db.collection(`conversations/${conversationId}/messages`).doc()
             return batch.set(newMessageDoc, message)
         })
+
+        // send notification to receiver about new message)
+        .then(() => toUserRef.get()
+            .then(doc => {
+                const toUserData = doc.data();
+                return messaging.sendToDevice(toUserData.token, payload)
+            })
+        )
+        .then(function(response) {
+            console.log("Successfully sent message:", response);
+        })
         .then(() => batch.commit())
+
+        // catch error if any happens
         .catch(error => {
             console.error('error: ', error)
             throw new functions.https.HttpsError('internal', error)

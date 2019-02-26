@@ -1,25 +1,51 @@
 
 let acceptRequest
 
-export const handler = (snapshot, context, db) => {
+export const handler = (snapshot, context, db, messaging) => {
     const convId = context.params.conversationId
     const messageId = context.params.messageId
     console.log(`new message ${messageId} in conversation ${convId}`)
 
     const messageData = snapshot.data()
     const sender = messageData.sender
+    const receiver = messageData.receiver
 
     const senderRef = db.collection('users').doc(sender)
+    const receiverRef = db.collection('users').doc(receiver)
+    const payload = {
+        notification: {
+            title: "New message",
+            from: sender,
+            body: messageData.text
+        }
+    }
+
     return senderRef.get()
+        // check if message accepts request if yes update database and send drink
         .then(doc => {
             const docData = doc.data();
-            const receiver = docData.conversations[convId].sender
-            if (receiver !== sender && docData.conversations[convId].accepted === false) {
+            const requestSender = docData.conversations[convId].sender
+            if (requestSender !== sender && docData.conversations[convId].accepted === false) {
                 console.log('request is accepted')
                 return acceptRequest(sender, receiver, convId, db)
             }
             
             console.log('it is not message which accepts request')
+        })
+        .then(() => receiverRef.get()
+            .then(doc => {
+                // for first message do not send message
+                if (messageData.drinkId === undefined) {
+                    const toUserData = doc.data();
+                    return messaging.sendToDevice(toUserData.token, payload)
+                }
+            })
+        )
+        .then(function(response) {
+            console.log("Successfully sent message:", response);
+        })
+        .catch(function(error) {
+            console.error("Error sending message:", error);
         })
 }
 
