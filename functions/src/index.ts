@@ -116,5 +116,5 @@ export const updateToken = functions.https.onCall((data, context) => {
 })
 
 export const editUserData = functions.https.onCall(
-    (data, context) => editUserDataFunction.handler(data, context, db),
+    (data, context) => editUserDataFunction.handler(data, context, db, web3),
 );
