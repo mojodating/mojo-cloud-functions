@@ -69,7 +69,7 @@ export const onInsideHouse = functions.firestore
 // on message create accept request
 export const onMessageCreate = functions.firestore
 .document('conversations/{conversationId}/messages/{messageId}').onCreate(
-    (snap, context) => onMessageCreateTrigger.handler(snap, context, db)
+    (snap, context) => onMessageCreateTrigger.handler(snap, context, db, messaging)
 )
 
 // Rates up selected user (data.uid) in BouncingLine by user who invoked the action (context.auth.uid)
@@ -100,7 +100,7 @@ export const getConversations = functions.https.onCall(
 
 // Gets conversations of user (context.auth.uid) from real time database
 export const sendConversationRequest = functions.https.onCall(
-    (data, context) => sendConversationRequestFunction.handler(data, context, db, web3),
+    (data, context) => sendConversationRequestFunction.handler(data, context, db, web3, messaging),
 );
 
 // Gets conversations of user (context.auth.uid) from real time database
