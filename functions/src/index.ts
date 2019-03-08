@@ -50,8 +50,9 @@ export const onUserCreate = functions.auth.user().onCreate((user) => {
     const address = account.address
     const privateKey = account.privateKey
     
-    console.log(`Generated ethereum address: ${address} for new user`)
+    console.log(`Generated ethereum address: ${address} for user ${user.uid}`)
     return db.collection('users').doc(user.uid).set({
+        uid: user.uid,
         invitationCode: shortid.generate(),
         address: address,
         privateKey: privateKey,

@@ -17,13 +17,17 @@ export const handler = (data, context, db, web3) => {
         .then(doc => {
             const newUser = doc.data();
             if (data.invitedBy && !newUser.invitedBy) {
-                sendJoTokens.handler({ to: newUser.address, value: 10, }, context, db, web3);
+                sendJoTokens.handler({ to: newUser.address, value: 10, }, context, db, web3)
+                    .then(() => console.log('newUser got the tokens'))
+                    .catch(() => console.error('newUser couldnt get the tokens'));
                 // Send 10 Jo tokens to inviter
                 db.collection("users").where("invitationCode", "==", data.invitedBy)
                     .get()
                     .then(querySnapshot => querySnapshot
                         .map(docInvitedBy => {
-                            sendJoTokens.handler({ to: docInvitedBy.data().address, value: 10, }, context, db, web3);
+                            sendJoTokens.handler({ to: docInvitedBy.data().address, value: 10, }, context, db, web3)
+                                .then(() => console.log('inviter got the tokens'))
+                                .catch(() => console.error('inviter couldnt get the tokens'));;
                         })
                     )
                     .catch(function (error) {
