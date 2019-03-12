@@ -6,7 +6,6 @@ import * as sendJoTokens from './sendJoTokens'
 import * as getBalance from './getBalance'
 import * as myDrinks from './myDrinks'
 import * as buyDrink from './buyDrink'
-import * as getConversationsFunction from './getConversations';
 import * as sendConversationRequestFunction from './sendConversationRequest';
 import * as sendFeedbackFunction from './sendFeedback';
 import * as onInsideHouseTrigger from './onInsideHouse'
@@ -71,11 +70,6 @@ exports.myDrinks = functions.https.onCall((data, context) => {
 exports.buyDrink = functions.https.onCall((data, context) => {
     return buyDrink.handler(data, context, db, web3)
 })
-
-// Gets conversations of user (context.auth.uid) from real time database
-export const getConversations = functions.https.onCall(
-    (data, context) => getConversationsFunction.handler(data, context, db),
-);
 
 // Gets conversations of user (context.auth.uid) from real time database
 export const sendConversationRequest = functions.https.onCall(

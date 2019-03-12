@@ -8,7 +8,7 @@ let payHouseReward
 // Handler checks if new user enters mojo house
 // for every new user it payes reward in Jo tokens
 // and sends notification to device
-export const handler = (messaging, web3, change) => {
+export const handler = async (messaging, web3, change) => {
     console.log('Function triggered by user change');
     const newValue = change.after.data();
     const previousValue = change.before.data();
@@ -21,19 +21,31 @@ export const handler = (messaging, web3, change) => {
 
         const payload = {
             notification: {
-                title: "Welcome in Mojo House",
-                body: "Congratulations you've entered the Mojo House."
+                title: "High rating reward",
+                body: "Congratulations you get a reward for high rating!"
             }
         }
 
-       return payHouseReward(web3, address)
-            .then(messaging.sendToDevice(token, payload))
-            .then(function(response) {
-                console.log("Successfully sent message:", response);
-            })
-            .catch(function(error) {
-                console.error("Error sending message:", error);
-            })
+        const source = fs.readFileSync(require.resolve('./../build/contracts/JOToken.json'))
+        const parsedSource = JSON.parse(source)
+        const JOToken = new web3.eth.Contract(parsedSource.abi, '0xfEc08bb2439bf6Bb207480F78B9db5C0b6aa50cE')
+
+        try {
+            await payHouseReward(web3, address)
+
+            // print balance, to check if reward was paid properly
+            const weiBalance = await JOToken.methods.balanceOf(address).call()
+            const balance = Number(web3.utils.fromWei(weiBalance, 'ether'))
+            console.log(`balance: ${balance}`) 
+
+            // send notification to device
+            const response = await messaging.sendToDevice(token, payload)
+            console.log(`message: ${payload.notification.body} to token: ${token}`)
+            console.log("Successfully sent message:", response);
+        }
+        catch(error) {
+            console.error("Error:", error);
+        }
     }
 
     return null
