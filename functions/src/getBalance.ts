@@ -23,6 +23,7 @@ export const handler = async (data, db, web3) => {
         const address = snapshot.data().address
         const weiBalance = await JOToken.methods.balanceOf(address).call()
         const balance = Number(web3.utils.fromWei(weiBalance, 'ether'))
+        console.log('balance found: ', balance);
         return {balance}
     }
     catch(error) {

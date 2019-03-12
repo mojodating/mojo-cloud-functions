@@ -10,6 +10,8 @@ import * as sendConversationRequestFunction from './sendConversationRequest';
 import * as sendFeedbackFunction from './sendFeedback';
 import * as onInsideHouseTrigger from './onInsideHouse'
 import * as onMessageCreateTrigger from './onMessageCreate'
+import * as editUserDataFunction from './editUserData';
+import * as shortid from 'shortid';
 import { WEB3_PROVIDER_ADDRESS } from './config'
 
 admin.initializeApp();
@@ -20,23 +22,43 @@ const web3 = new Web3(new Web3.providers.HttpProvider(WEB3_PROVIDER_ADDRESS))
 
 // This trigger is executed on every new user added to database
 // It creates ethereum key pair and stores it in user document
-export const onUserCreate = 
-functions.firestore.document('users/{userId}').onCreate((snapshot, context) => {
+// export const onUserCreate = 
+// functions.firestore.document('users/{userId}').onCreate((snapshot, context) => {
+//     console.log('A new user has been added.')
+
+//     const account = web3.eth.accounts.create()
+//     const address = account.address
+//     const privateKey = account.privateKey
+    
+//     console.log(`Generated ethereum address: ${address} for new user`)
+    
+//     return snapshot.ref.update({
+//         address: address,
+//         privateKey: privateKey,
+//         nonce: 0,
+//         insideHouse: false
+//     })
+// });
+
+// This trigger is executed on every new user added to authentication list in Firebase
+// It creates invitatinoCode, ethereum key pair and stores it in user document
+export const onUserCreate = functions.auth.user().onCreate((user) => {
     console.log('A new user has been added.')
 
     const account = web3.eth.accounts.create()
     const address = account.address
     const privateKey = account.privateKey
     
-    console.log(`Generated ethereum address: ${address} for new user`)
-    
-    return snapshot.ref.update({
+    console.log(`Generated ethereum address: ${address} for user ${user.uid}`)
+    return db.collection('users').doc(user.uid).set({
+        uid: user.uid,
+        invitationCode: shortid.generate(),
         address: address,
         privateKey: privateKey,
         nonce: 0,
         insideHouse: false
-    })
-});
+    });
+})
 
 // This function is triggered by user metadata change
 export const onInsideHouse = functions.firestore
@@ -87,3 +109,7 @@ export const updateToken = functions.https.onCall((data, context) => {
         token: data.token
     })
 })
+
+export const editUserData = functions.https.onCall(
+    (data, context) => editUserDataFunction.handler(data, context, db, web3),
+);
