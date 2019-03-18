@@ -22,7 +22,6 @@ export const transferTokens = async (db, web3, data) => {
     const JOToken = new web3.eth.Contract(parsedSource.abi, data.jotokenAddress)
 
     try {
-        // pay for drink
         const userDoc = await db.doc(`users/${data.uid}`).get()
         const senderPrivKey = userDoc.data().privateKey
         const senderNonce = userDoc.data().nonce + 1

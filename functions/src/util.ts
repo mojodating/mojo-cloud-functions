@@ -21,3 +21,11 @@ export const guid = () => {
     return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
   }
   
+export const truncateMessage = (text) => {
+    let message = text.split('\n')[0];
+    if (message.length > 40) {
+        message = message.substr(0, 30) + '...'
+    }
+
+    return message
+};
