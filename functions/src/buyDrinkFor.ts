@@ -1,15 +1,13 @@
 import * as functions from 'firebase-functions'
-import {transferTokens} from './transferTokens'
+import { RELAYER_ADDRESS } from './config'
 
 // User buyes drink with JO tokens for other address as gift, gift has to be accepted
 // data - {uid: string,
 //         receiver:  string  - recipient address,
 //         drinktypeid: string - drinktype id
-//         jotokenAddress: string - token address
-//         relayer: string - address which will pay for transaction
-//         relayerPrivKey: string}
+//         }
 // retruns - purchased drink id
-export const buyDrinkFor = async (db, web3, data) => {
+export const buyDrinkFor = async (db, data) => {
 
     if(!(typeof data.drinktypeid === 'string') || data.drinktypeid === '') {
         throw new functions.https.HttpsError('invalid-argument', 'drink id shall be non empty string')
@@ -21,14 +19,13 @@ export const buyDrinkFor = async (db, web3, data) => {
         const value = drinkTypeDoc.data().price * 1e18
 
         // pay for drink with JO tokens
-        await transferTokens(db, web3, {
-            uid: data.uid,
-            to: data.relayer,
+        const txRef = await db.collection("transactions").add({
+            fromUid: data.uid,
+            toAddr: RELAYER_ADDRESS,
             value: value,
-            jotokenAddress: data.jotokenAddress,
-            relayer: data.relayer,
-            relayerPrivKey: data.relayerPrivKey
+            status: "waiting"
         })
+        await txRef.update({id: txRef.id})
 
         // assign drink to receiver, drink is blocked until
         // receiver will accept gift

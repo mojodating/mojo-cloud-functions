@@ -10,6 +10,7 @@ import * as sendConversationRequestFunction from './sendConversationRequest';
 import * as sendFeedbackFunction from './sendFeedback';
 import * as onInsideHouseTrigger from './onInsideHouse'
 import * as onMessageCreateTrigger from './onMessageCreate'
+import * as onTransactionCreateTrigger from './onTransaction'
 import * as editUserDataFunction from './editUserData';
 import * as shortid from 'shortid';
 import { WEB3_PROVIDER_ADDRESS } from './config'
@@ -19,26 +20,6 @@ admin.initializeApp();
 const db = admin.firestore()
 const messaging = admin.messaging()
 const web3 = new Web3(new Web3.providers.HttpProvider(WEB3_PROVIDER_ADDRESS))
-
-// This trigger is executed on every new user added to database
-// It creates ethereum key pair and stores it in user document
-// export const onUserCreate = 
-// functions.firestore.document('users/{userId}').onCreate((snapshot, context) => {
-//     console.log('A new user has been added.')
-
-//     const account = web3.eth.accounts.create()
-//     const address = account.address
-//     const privateKey = account.privateKey
-    
-//     console.log(`Generated ethereum address: ${address} for new user`)
-    
-//     return snapshot.ref.update({
-//         address: address,
-//         privateKey: privateKey,
-//         nonce: 0,
-//         insideHouse: false
-//     })
-// });
 
 // This trigger is executed on every new user added to authentication list in Firebase
 // It creates invitatinoCode, ethereum key pair and stores it in user document
@@ -72,6 +53,12 @@ export const onMessageCreate = functions.firestore
     (snap, context) => onMessageCreateTrigger.handler(snap, context, db, messaging)
 )
 
+// on message create accept request
+export const onTransaction = functions.firestore
+.document('transactions/{transactionId}').onCreate(
+    (snap, context) => onTransactionCreateTrigger.handler(snap, context, db, web3)
+)
+
 // Rates up selected user (data.uid) in BouncingLine by user who invoked the action (context.auth.uid)
 export const rate = functions.https.onCall(
     (data, context) => rateFunction.handler(data, context, db),
@@ -95,7 +82,7 @@ exports.buyDrink = functions.https.onCall((data, context) => {
 
 // Gets conversations of user (context.auth.uid) from real time database
 export const sendConversationRequest = functions.https.onCall(
-    (data, context) => sendConversationRequestFunction.handler(data, context, db, web3, messaging),
+    (data, context) => sendConversationRequestFunction.handler(data, context, db, messaging),
 );
 
 // Gets conversations of user (context.auth.uid) from real time database
