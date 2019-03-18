@@ -113,19 +113,20 @@ export const handler = (data, context, db, web3, messaging) => {
             return batch.set(newMessageDoc, message)
         })
 
-        // send notification to receiver about new message)
+        // send notification to receiver about chat request
         .then(() => toUserRef.get()
             .then(doc => {
                 // prepare message notification payload
                 const payload = {
                     notification: {
-                        title: fromUserData.fullname,
+                        title: 'New chat request from ' + fromUserData.fullname,
                         from: fromUid,
-                        body: data.text
+                        body: util.truncateMessage(data.text),
+                        badge: '1'
                     }
                 }
                 const toUserData = doc.data();
-                console.log(`message: ${data.text} to token: ${toUserData.token}`)
+                console.log(`message: ${payload.notification.body} to token: ${toUserData.token}`)
                 return messaging.sendToDevice(toUserData.token, payload)
             })
         )

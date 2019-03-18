@@ -1,3 +1,4 @@
+import * as util from './util'
 
 let acceptRequest
 
@@ -32,9 +33,10 @@ export const handler = (snapshot, context, db, messaging) => {
             .then(doc => {
                 const payload = {
                     notification: {
-                        title: fromUserData.fullname,
+                        title: 'New message from ' + fromUserData.fullname,
                         from: sender,
-                        body: messageData.text
+                        body: util.truncateMessage(messageData.text),
+                        badge: '1'
                     }
                 }
                 // for first message do not send message

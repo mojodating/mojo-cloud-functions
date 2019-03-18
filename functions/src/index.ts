@@ -3,8 +3,8 @@ import * as Web3 from 'web3'
 import * as admin from 'firebase-admin'
 import * as rateFunction from './rate';
 import * as sendJoTokens from './sendJoTokens'
+import * as sendDrink from './sendDrink'
 import * as getBalance from './getBalance'
-import * as myDrinks from './myDrinks'
 import * as buyDrink from './buyDrink'
 import * as sendConversationRequestFunction from './sendConversationRequest';
 import * as sendFeedbackFunction from './sendFeedback';
@@ -81,13 +81,13 @@ exports.sendJoTokens = functions.https.onCall((data, context) => {
     return sendJoTokens.handler(data, context, db, web3)
 })
 
+exports.sendDrink = functions.https.onCall((data, context) => {
+    return sendDrink.handler(data, context, db)
+})
+
 exports.getBalance = functions.https.onCall(
     (data, context) => getBalance.handler(data, db, web3)
 )
-
-exports.myDrinks = functions.https.onCall((data, context) => {
-    return myDrinks.handler(context, db)
-})
 
 exports.buyDrink = functions.https.onCall((data, context) => {
     return buyDrink.handler(data, context, db, web3)

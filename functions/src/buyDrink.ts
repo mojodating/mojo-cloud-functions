@@ -1,7 +1,8 @@
 import * as functions from 'firebase-functions'
 import {transferTokens} from './transferTokens'
 
-// User buyes drink with JO tokens
+// User buyes drink with JO tokens 
+// This function is for marketplace
 // data - { typeid: string // drink type id }
 // retruns - purchased drink details
 export const handler = async (data, context, db, web3) => {

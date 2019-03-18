@@ -1,7 +1,7 @@
 import * as functions from 'firebase-functions'
 import {transferTokens} from './transferTokens'
 
-// User buyes drink with JO tokens
+// User buyes drink with JO tokens for other address as gift, gift has to be accepted
 // data - {uid: string,
 //         receiver:  string  - recipient address,
 //         drinktypeid: string - drinktype id
