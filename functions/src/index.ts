@@ -44,7 +44,7 @@ export const onUserCreate = functions.auth.user().onCreate((user) => {
 // This function is triggered by user metadata change
 export const onInsideHouse = functions.firestore
 .document('users/{userId}').onUpdate(
-    (change, context) => onInsideHouseTrigger.handler(messaging, web3, change)
+    (change, context) => onInsideHouseTrigger.handler(messaging, web3, db, change)
 )
 
 // on message create accept request

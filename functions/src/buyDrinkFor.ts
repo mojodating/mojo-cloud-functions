@@ -4,8 +4,7 @@ import { RELAYER_ADDRESS } from './config'
 // User buyes drink with JO tokens for other address as gift, gift has to be accepted
 // data - {uid: string,
 //         receiver:  string  - recipient address,
-//         drinktypeid: string - drinktype id
-//         }
+//         drinktypeid: string - drinktype id}
 // retruns - purchased drink id
 export const buyDrinkFor = async (db, data) => {
 
@@ -18,12 +17,16 @@ export const buyDrinkFor = async (db, data) => {
         const drinkTypeDoc = await db.collection('drinkTypes').doc(data.drinktypeid).get()
         const value = drinkTypeDoc.data().price * 1e18
 
-        // pay for drink with JO tokens
+        // postponed payment for drink with JO tokens - below code only puts to transactions collection
+        // every waiting transaction in transactions collection will be executed by additinal cloud function ("onTransaction")
+        // This mechanism was created to not block http request with token transfer
         const txRef = await db.collection("transactions").add({
             fromUid: data.uid,
             toAddr: RELAYER_ADDRESS,
-            value: value,
-            status: "waiting"
+            value: value/1e18,
+            status: "waiting",
+            type: "drink payment",
+            date: new Date().getTime()/1000
         })
         await txRef.update({id: txRef.id})
 

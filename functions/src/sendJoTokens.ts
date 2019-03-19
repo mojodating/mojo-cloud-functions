@@ -32,6 +32,16 @@ export const handler = async (data, context, db, web3) => {
             relayerPrivKey: relayerPrivKey
         })
 
+        const txRef = await db.collection("transactions").add({
+            fromUid: context.auth.uid,
+            toAddr: data.to,
+            value: data.value/1e18,
+            status: "done",
+            type: "token transfer",
+            date: new Date().getTime()/1000,
+        })
+        await txRef.update({id: txRef.id})
+
         return receipt.transactionHash
     }
     catch(error) {
