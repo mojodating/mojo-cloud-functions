@@ -15,7 +15,9 @@ export const handler = (snapshot, context, db, messaging) => {
     const receiverRef = db.collection('users').doc(receiver)
     let fromUserData
 
-    return senderRef.get()
+        // add id to every message
+    return db.collection('conversations').doc(convId).collection('messages').doc(snapshot.id).update({id: snapshot.id})
+        .then(() => senderRef.get())
         // check if message accepts request if yes update database and send drink
         .then(doc => {
             fromUserData = doc.data();

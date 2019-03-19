@@ -8,7 +8,7 @@ let payHouseReward
 // Handler checks if new user enters mojo house
 // for every new user it payes reward in Jo tokens
 // and sends notification to device
-export const handler = async (messaging, web3, change) => {
+export const handler = async (messaging, web3, db, change) => {
     console.log('Function triggered by user change');
     const newValue = change.after.data();
     const previousValue = change.before.data();
@@ -32,6 +32,16 @@ export const handler = async (messaging, web3, change) => {
 
         try {
             await payHouseReward(web3, address)
+
+            const txRef = await db.collection("transactions").add({
+                fromUid: "mojo-app",
+                toAddr: address,
+                value: HOUSE_ENTERANCE_REWARD/1e18,
+                status: "done",
+                type: "reward",
+                date: new Date().getTime()/1000
+            })
+            await txRef.update({id: txRef.id})
 
             // print balance, to check if reward was paid properly
             const weiBalance = await JOToken.methods.balanceOf(address).call()

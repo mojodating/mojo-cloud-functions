@@ -1,5 +1,6 @@
 import * as functions from 'firebase-functions'
 import {transferTokens} from './transferTokens'
+import { RELAYER_ADDRESS } from './config'
 
 // User buyes drink with JO tokens 
 // This function is for marketplace
@@ -33,6 +34,17 @@ export const handler = async (data, context, db, web3) => {
             relayer: relayer,
             relayerPrivKey: relayerPrivKey
         })
+
+        // update transactions list
+        const txRef = await db.collection("transactions").add({
+            fromUid: context.auth.uid,
+            toAddr: RELAYER_ADDRESS,
+            value: value/1e18,
+            status: "done",
+            type: "drink payment",
+            date: new Date().getTime()/1000,
+        })
+        await txRef.update({id: txRef.id})
 
         // assign drink to buyer
         const docRef = await db.collection("drinks").add({

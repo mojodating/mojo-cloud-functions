@@ -7,7 +7,7 @@ import {buyDrinkFor} from './buyDrinkFor'
 // context - Firebase https.onCall Context
 // rtdb - realtime database to use in function
 // db - firestore database to use in function
-export const handler = (data, context, db, web3, messaging) => {
+export const handler = (data, context, db, messaging) => {
     if (!context.auth) {
         throw new functions.https.HttpsError('failed-precondition', 'The function must be called ' +
             'while authenticated.');
@@ -27,11 +27,6 @@ export const handler = (data, context, db, web3, messaging) => {
     const toUserRef = db.collection('users').doc(toUid)
     let drink
     let fromUserData
-
-    // read env variables
-    const jotokenAddress = process.env.JOTOKEN_ADDRESS
-    const relayer = process.env.RELAYER_ADDRESS
-    const relayerPrivKey = process.env.RELAYER_PRIVATE_KEY
     const batch = db.batch()
     
     // buy drink and send
@@ -47,13 +42,11 @@ export const handler = (data, context, db, web3, messaging) => {
                     }
                 })
             }
-            return buyDrinkFor(db, web3, {
+
+            return buyDrinkFor(db, {
                 uid: fromUid,
                 receiver: toUid,
-                drinktypeid: data.drinktypeid,
-                jotokenAddress: jotokenAddress,
-                relayer: relayer,
-                relayerPrivKey: relayerPrivKey
+                drinktypeid: data.drinktypeid
             })
         })
 
