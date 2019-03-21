@@ -115,7 +115,8 @@ export const handler = (data, context, db, messaging) => {
                         title: 'New chat request from ' + fromUserData.fullname,
                         from: fromUid,
                         body: util.truncateMessage(data.text),
-                        badge: '1'
+                        badge: '1',
+                        conversationId: conversationId
                     }
                 }
                 const toUserData = doc.data();

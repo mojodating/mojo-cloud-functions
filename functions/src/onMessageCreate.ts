@@ -38,7 +38,8 @@ export const handler = (snapshot, context, db, messaging) => {
                         title: 'New message from ' + fromUserData.fullname,
                         from: sender,
                         body: util.truncateMessage(messageData.text),
-                        badge: '1'
+                        badge: '1',
+                        conversationId: convId,
                     }
                 }
                 // for first message do not send message
